@@ -1,0 +1,7 @@
+flowchart TB
+    F01["图01 E2E 主路径<br/>e2e_skeleton / ma-demo figure-01"]
+    F11["图11 故障演练<br/>scenarios.py 五函数"]
+    PROTO["同一套 Store + 状态机 + Gateway + Worker"]
+    F01 --> PROTO
+    F11 --> PROTO
+    F11 -.->|验证异常时不破坏| INV["幂等 / 栅栏 / UNKNOWN / Outbox"]

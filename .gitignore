@@ -1,0 +1,26 @@
+# IDE / 本地环境
+.idea/
+.vscode/
+venv/
+.venv/
+
+# 密钥（langgraph-agent/.env 等）
+.env
+.env.*
+!.env.example
+!**/env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.exe
+
+# OS
+Thumbs.db
+.DS_Store

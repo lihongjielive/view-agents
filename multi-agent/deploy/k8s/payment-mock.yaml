@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-mock
+  namespace: multi-agent
+  labels:
+    app: payment-mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-mock
+  template:
+    metadata:
+      labels:
+        app: payment-mock
+    spec:
+      containers:
+        - name: payment-mock
+          image: python:3.12-slim
+          command: ["python", "-m", "uvicorn", "multi_agent.payment.server:app", "--host", "0.0.0.0", "--port", "8080"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-mock
+  namespace: multi-agent
+spec:
+  selector:
+    app: payment-mock
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http

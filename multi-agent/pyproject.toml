@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-agent"
+version = "0.1.0"
+description = "Production Multi-Agent recoverable execution (Python state-machine simulation)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.0",
+    "typer>=0.12.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+langgraph = [
+    "langgraph>=0.2.0",
+    "langchain-core>=0.3.0",
+]
+postgres = [
+    "psycopg[binary]>=3.2.0",
+]
+
+[project.scripts]
+payment-mock = "multi_agent.payment.server:main"
+ma-demo = "multi_agent.demo:main"
+ma-metrics = "multi_agent.metrics_server:main"
+ma-api = "multi_agent.api_server:main"
+ma-walkthrough = "multi_agent.demo_walkthrough:main"
+ma-langgraph-poc = "multi_agent.langgraph_poc.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "fault_drill: slide-11 fault injection scenarios",
+    "figure01: slide-01 protocol E2E skeleton",
+    "figure02: slide-02 response lost / timeout",
+    "metrics: slide-10 observability",
+    "outbox: slide-06 outbox",
+    "figure04: slide-04 business_key",
+    "figure05: slide-05 state machine",
+    "figure08: slide-08 needs review",
+    "gate09: slide-09 gateway gates",
+    "langgraph_poc: P2 langgraph propose layer",
+    "postgres: P2 PostgreSQL Store adapter",
+]

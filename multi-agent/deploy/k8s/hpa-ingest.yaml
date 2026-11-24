@@ -1,0 +1,21 @@
+# 图 10 对照：交接侧 — lag / unpublished outbox 高时扩容 Ingest
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: multi-agent-ingest
+  namespace: multi-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: multi-agent-outbox-publisher
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: External
+      external:
+        metric:
+          name: multi_agent_kafka_consumer_lag
+        target:
+          type: AverageValue
+          averageValue: "100"

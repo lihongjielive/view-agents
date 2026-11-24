@@ -1,0 +1,24 @@
+flowchart TB
+    subgraph entry [入口]
+        PY[pytest test_fault_drill.py]
+        CLI[scripts/fault_drill/run_all.py]
+    end
+    subgraph pkg [fault_drill 包]
+        INIT[fault_drill/__init__.py 导出 5 个 run_*]
+        SC[scenarios.py]
+    end
+    subgraph deps [依赖组件]
+        ST[(Store memory)]
+        OB[OutboxPipeline]
+        ENG[SupervisorEngine]
+        PAY[payment Mock + PaymentClient]
+    end
+    PY --> INIT
+    CLI --> INIT
+    INIT --> SC
+    SC --> ST
+    SC --> OB
+    SC --> ENG
+    SC --> PAY
+    SC -->|assert 通过| OK[返回 dict 结果]
+    SC -->|assert 失败| FAIL[pytest / run_all 报错]

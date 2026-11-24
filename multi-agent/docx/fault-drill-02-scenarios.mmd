@@ -1,0 +1,39 @@
+flowchart TB
+    subgraph s1 [lost_publish_ack]
+        direction TB
+        A1[create_workflow 产生 outbox] --> A2[publish simulate_ack_loss]
+        A2 --> A3[仍有未发布]
+        A3 --> A4[再次 publish 成功]
+        A4 --> A5[unpublished = 0]
+    end
+    subgraph s2 [crash_before_offset]
+        direction TB
+        B1[publish] --> B2[ingest 第一次]
+        B2 --> B3[ingest 重放第二次]
+        B3 --> B4[replay_ingest = 0]
+    end
+    subgraph s3 [worker_disconnect]
+        direction TB
+        C1[A claim + running] --> C2[租约过期改 READY]
+        C2 --> C3[B claim attempt+1]
+        C3 --> C4[A fenced 写失败]
+        C4 --> C5[B fenced 成功]
+    end
+    subgraph s4 [success_response_lost]
+        direction TB
+        D1[fault drop_response] --> D2[run_refund 失败 UNKNOWN]
+        D2 --> D3[POST 计数仍为 1]
+        D3 --> D4[reconcile GET]
+        D4 --> D5[refund SUCCEEDED]
+    end
+    subgraph s5 [late_callback]
+        direction TB
+        E1[注入 late_callback] --> E2[POST 504]
+        E2 --> E3[sleep 等回调]
+        E3 --> E4[GET 200 SUCCEEDED]
+        E4 --> E5[admin/callbacks 有记录]
+    end
+    s1 ~~~ s2
+    s2 ~~~ s3
+    s3 ~~~ s4
+    s4 ~~~ s5

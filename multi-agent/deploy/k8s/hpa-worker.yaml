@@ -1,0 +1,21 @@
+# 图 10 对照：执行侧 — READY 积压 / oldest age 高时扩容 Worker
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: multi-agent-execution-worker
+  namespace: multi-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: multi-agent-refund-worker
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: External
+      external:
+        metric:
+          name: multi_agent_task_ready_pending_count
+        target:
+          type: AverageValue
+          averageValue: "20"
