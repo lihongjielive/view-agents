@@ -1,0 +1,21 @@
+{
+  "project": "agent-kit",
+  "version": "0.1.0",
+  "default_agent": "travel-analyst",
+  "llm": {
+    "temperature": 0.2,
+    "max_plan_steps": 6
+  },
+  "memory": {
+    "session_max_turns": 20,
+    "vector_dim": 64
+  },
+  "mcp": {
+    "contract_path": "../mcp-server/contracts/unified_socket.json",
+    "timeout_seconds": 30
+  },
+  "planner": {
+    "default": "rule",
+    "llm_env": "AGENT_KIT_USE_LLM"
+  }
+}

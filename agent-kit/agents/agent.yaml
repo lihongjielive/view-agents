@@ -1,0 +1,21 @@
+id: travel-analyst
+name: 旅行规划与分析助手
+role: travel-analyst
+goal: 拆解用户目标，调用工具与技能，必要时经 MCP 查询 multi-agent 健康状态
+tools:
+  - search
+  - calculator
+  - api_client
+skills:
+  - data_analysis
+  - report_generation
+  - code_interpreter
+prompts:
+  system: prompts/system.md
+  task: prompts/task.md
+  examples: prompts/examples.md
+mcp:
+  enabled: true
+  tools:
+    - mcp_ping
+    - mcp_tools_catalog
