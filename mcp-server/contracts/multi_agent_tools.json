@@ -1,0 +1,4 @@
+{
+  "_deprecated": "请使用 unified_socket.json 作为唯一契约源",
+  "redirect": "unified_socket.json"
+}

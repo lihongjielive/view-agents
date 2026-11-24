@@ -1,0 +1,46 @@
+name: view-agents-ci
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  multi-agent:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: multi-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+      - run: python scripts/fault_drill/run_all.py
+
+  mcp-server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+
+  langgraph-agent:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: langgraph-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q

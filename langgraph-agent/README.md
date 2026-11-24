@@ -10,7 +10,7 @@
 
 文档：[AgentState 使用说明](docs/agent-state.md)
 
-并列工程：[multi-agent](../multi-agent) — 生产级可恢复执行协议（Supervisor + 持久状态 + 支付 Mock，与本文演示互补）。其中 [LangGraph PoC](../multi-agent/docs/langgraph-poc.md) 演示：**本仓负责 LLM 循环，multi-agent 负责 Gateway/Worker 执行**。
+并列工程：[multi-agent](../multi-agent)、[mcp-server](../mcp-server) — 生产协议与 MCP 工具面（Supervisor + 持久状态 + 支付 Mock，与本文演示互补）。其中 [LangGraph PoC](../multi-agent/docs/langgraph-poc.md) 演示：**本仓负责 LLM 循环，multi-agent 负责 Gateway/Worker 执行**。
 
 ## 目录
 

@@ -1,0 +1,153 @@
+{
+  "socket_version": "1.0.0",
+  "title": "view-agents 统一 MCP 插口",
+  "description": "USB-C 式单一契约：tools/list 标签与 LangGraph / ma-api 同源；执行经 Bridge，禁止支付直写。",
+  "plugs": [
+    {
+      "id": "core",
+      "title": "插口元数据（诊断与按需标签）",
+      "tools": ["mcp_ping", "mcp_server_info", "mcp_tools_catalog", "mcp_tools_describe"]
+    },
+    {
+      "id": "multi_agent",
+      "title": "售后执行协议 — 提议层",
+      "backend": "ma-api",
+      "tools": [
+        "multi_agent_health",
+        "multi_agent_create_workflow",
+        "multi_agent_submit_proposal"
+      ]
+    },
+    {
+      "id": "langgraph",
+      "title": "LangGraph 桥接占位",
+      "tools": ["langgraph_agent_status"]
+    }
+  ],
+  "tools": [
+    {
+      "name": "mcp_ping",
+      "catalogSummary": "存活检查",
+      "description": "存活检查；无副作用。返回 service 与 version。",
+      "plug": "core",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "inputSchema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "mcp_server_info",
+      "catalogSummary": "桥接配置（脱敏）",
+      "description": "当前已启用 plug 与 HTTP 桥接配置（不回显 token）。",
+      "plug": "core",
+      "readOnlyHint": true,
+      "idempotentHint": true,
+      "inputSchema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "mcp_tools_catalog",
+      "catalogSummary": "短目录（省上下文）",
+      "description": "返回所有 plug 的工具短目录：仅 name + catalogSummary + plug，不含完整 inputSchema。模型需要参数细节时先调 mcp_tools_describe。",
+      "plug": "core",
+      "readOnlyHint": true,
+      "idempotentHint": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "plug_id": { "type": "string", "description": "可选，只列某一 plug" }
+        }
+      }
+    },
+    {
+      "name": "mcp_tools_describe",
+      "catalogSummary": "单工具完整标签",
+      "description": "按契约返回指定工具的 description、inputSchema、annotations、maps_to（若有）。",
+      "plug": "core",
+      "readOnlyHint": true,
+      "idempotentHint": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["name"],
+        "properties": { "name": { "type": "string" } }
+      }
+    },
+    {
+      "name": "multi_agent_health",
+      "catalogSummary": "ma-api /health",
+      "description": "探测 multi-agent HTTP GET /health；无写副作用。",
+      "plug": "multi_agent",
+      "readOnlyHint": true,
+      "idempotentHint": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "base_url": { "type": "string" }
+        }
+      },
+      "maps_to": { "method": "GET", "path": "/health" }
+    },
+    {
+      "name": "multi_agent_create_workflow",
+      "catalogSummary": "建 workflow",
+      "description": "创建 refund+coupon 工作流；持久化于 Store，不 POST 支付。",
+      "plug": "multi_agent",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["order_id", "after_sale_id", "refund_amount"],
+        "properties": {
+          "order_id": { "type": "string" },
+          "after_sale_id": { "type": "string" },
+          "refund_amount": { "type": "number", "exclusiveMinimum": 0 },
+          "tenant": { "type": "string", "default": "T1" },
+          "base_url": { "type": "string" }
+        }
+      },
+      "maps_to": { "method": "POST", "path": "/v1/workflows" }
+    },
+    {
+      "name": "multi_agent_submit_proposal",
+      "catalogSummary": "Gateway 提议",
+      "description": "Tool Gateway 提议裁决（图03）；仅返回 allow/code/reason，不写支付。",
+      "plug": "multi_agent",
+      "readOnlyHint": true,
+      "idempotentHint": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["workflow_id", "tool", "order_id", "after_sale_id", "amount"],
+        "properties": {
+          "workflow_id": { "type": "string" },
+          "tool": { "type": "string", "enum": ["refund.create", "coupon.issue"] },
+          "order_id": { "type": "string" },
+          "after_sale_id": { "type": "string" },
+          "amount": { "type": "number", "exclusiveMinimum": 0 },
+          "tenant": { "type": "string", "default": "T1" },
+          "actor": { "type": "string", "default": "mcp-client" },
+          "access_token": { "type": "string" },
+          "base_url": { "type": "string" }
+        }
+      },
+      "maps_to": { "method": "POST", "path": "/v1/proposals" }
+    },
+    {
+      "name": "langgraph_agent_status",
+      "catalogSummary": "LangGraph 桥接状态",
+      "description": "LangGraph HTTP 桥接是否配置（P2 扩展）。",
+      "plug": "langgraph",
+      "readOnlyHint": true,
+      "idempotentHint": true,
+      "inputSchema": { "type": "object", "properties": {} }
+    }
+  ],
+  "resources": [
+    { "uri": "view-agents://protocol/execution-summary", "mimeType": "text/markdown" },
+    { "uri": "view-agents://multi-agent/gateway-codes", "mimeType": "text/markdown" },
+    { "uri": "view-agents://socket/manifest", "mimeType": "application/json" }
+  ],
+  "prompts": [
+    { "name": "refund-after-sale-assist", "arguments": ["order_id", "after_sale_id"] }
+  ],
+  "forbidden_tool_patterns": ["payment_post", "post_refund", "direct_payment"]
+}
