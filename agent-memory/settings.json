@@ -1,0 +1,14 @@
+{
+  "session": {
+    "recent_turns": 6,
+    "compress_after_turns": 12
+  },
+  "compression": {
+    "max_summary_chars": 2000
+  },
+  "vector": {
+    "default_project": "default",
+    "top_k": 3,
+    "embed_mode": "bag"
+  }
+}

@@ -8,6 +8,7 @@ LangGraph 演示与生产级 Multi-Agent 执行协议对照 monorepo。
 | [`multi-agent/`](multi-agent/) | 可恢复执行协议：SQLite Store、Gateway、Worker、支付 Mock（生产仿真） |
 | [`mcp-server/`](mcp-server/) | 通用 FastMCP（stdio），可选桥接 `ma-api` 提议层 |
 | [`agent-kit/`](agent-kit/) | 0→1 Agent 骨架：prompts / 规划 / 记忆 / tools / skills / MCP Client |
+| [`agent-memory/`](agent-memory/) | 四种记忆：会话检查点、摘要压缩、事实画像、向量检索 |
 
 ## 快速开始
 
@@ -36,8 +37,13 @@ pip install -e ".[dev]"
 agent-kit init-info
 agent-kit run "查询北京天气"
 agent-kit analyze tests/fixtures/sample.csv
+
+# Agent 四种记忆（第五项目）
+cd agent-memory
+pip install -e ".[dev]"
+agent-memory demo-report
 ```
 
-OpenSpec：`mcp-server/openspec/changes/explore-mcp-bridge/proposal.md`；`agent-kit/openspec/changes/explore-fullstack-agent/proposal.md`（**P1 apply 完成**）。
+OpenSpec：`mcp-server/.../explore-mcp-bridge` · `agent-kit/.../explore-fullstack-agent` · [`agent-memory/.../explore-four-memories`](agent-memory/openspec/changes/explore-four-memories/proposal.md)（**P1 apply 完成**）。
 
 文档与 OpenSpec 见各子项目 `README.md`、`openspec/`。

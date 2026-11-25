@@ -42,6 +42,8 @@ def run_demo(
     typer.echo(f"规划 {len(result.plan)} 步")
     for step in result.plan:
         typer.echo(f"  {step.index}. [{step.kind.value}] {step.target} — {step.description}")
+    if result.memory_session_id:
+        typer.echo(f"memory_session_id={result.memory_session_id}")
     if result.report and "content" in result.report:
         typer.echo("\n--- 报告 ---\n")
         typer.echo(result.report["content"])
@@ -110,4 +112,9 @@ def memory_search_cmd(
 
 
 if __name__ == "__main__":
-    app()
+    import sys
+
+    # PyCharm 直接调试 cli.py 时通常不带参数；默认 init-info 便于自检。
+    if len(sys.argv) == 1:
+        sys.argv.append("init-info")
+    app(prog_name="agent-kit")

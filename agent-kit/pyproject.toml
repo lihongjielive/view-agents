@@ -19,6 +19,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+memory = []
 dev = ["pytest>=8.0.0"]
 
 [project.scripts]

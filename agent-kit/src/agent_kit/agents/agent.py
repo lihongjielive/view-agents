@@ -1,6 +1,7 @@
 """智能体：规划 + 记忆 + 工具/技能 + MCP。"""
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -8,6 +9,11 @@ from typing import Any
 from agent_kit.config import Settings, load_agent_yaml
 from agent_kit.memory.base import SQLiteMemory
 from agent_kit.memory.vector_store import InMemoryVectorStore
+from agent_kit.memory_adapter import (
+    build_planner_context,
+    sync_user_turn,
+    try_load_coordinator,
+)
 from agent_kit.mcp_client import McpClient
 from agent_kit.planning import PlanStep, StepKind, resolve_plan
 from agent_kit.prompt_loader import load_prompt, render_task
@@ -21,6 +27,7 @@ class AgentRunResult:
     plan: list[PlanStep]
     observations: list[dict[str, Any]] = field(default_factory=list)
     report: dict[str, Any] | None = None
+    memory_session_id: str | None = None
 
 
 def _index_examples(vectors: InMemoryVectorStore, settings: Settings) -> None:
@@ -41,6 +48,12 @@ class KitAgent:
         system = load_prompt(self.spec["prompts"]["system"])
         self.vectors.add(system, doc_id="system-prompt")
         _index_examples(self.vectors, self.settings)
+        self._coordinator = try_load_coordinator()
+        self._memory_session_id: str | None = os.getenv("AGENT_KIT_SESSION_ID")
+        if self._coordinator and not self._memory_session_id:
+            self._memory_session_id = self._coordinator.session.create_session(
+                topic=self.spec.get("name", "agent-kit")
+            )
 
     def memory_search(self, query: str, k: int = 3) -> list[str]:
         return [rec.text for score, rec in self.vectors.search(query, k=k) if score > 0]
@@ -53,10 +66,19 @@ class KitAgent:
         use_llm: bool = False,
     ) -> AgentRunResult:
         self.memory.add_turn("user", goal)
-        session_ctx = self.memory.session_context()
-        retrieved = self.memory_search(goal, k=2)
-        extra = "\n".join(retrieved)
-        context = f"{session_ctx}\n\n检索示例:\n{extra}".strip()
+
+        if self._coordinator and self._memory_session_id:
+            sync_user_turn(self._coordinator, self._memory_session_id, goal)
+            uid = os.getenv("AGENT_KIT_USER_ID", "default-user")
+            context = build_planner_context(
+                self._coordinator, self._memory_session_id, uid, goal
+            )
+        else:
+            session_ctx = self.memory.session_context()
+            retrieved = self.memory_search(goal, k=2)
+            extra = "\n".join(retrieved)
+            context = f"{session_ctx}\n\n检索示例:\n{extra}".strip()
+
         max_steps = int(self.settings.raw.get("llm", {}).get("max_plan_steps", 6))
         _ = render_task(goal, context, max_steps=max_steps)
         plan = resolve_plan(goal, context, use_llm=use_llm)
@@ -96,6 +118,11 @@ class KitAgent:
 
             observations.append({"step": step.index, "target": step.target, "output": out})
             self.memory.add_turn("assistant", f"{step.target}: {out!s}")
+            if self._coordinator and self._memory_session_id:
+                role = "tool" if step.kind == StepKind.TOOL else "assistant"
+                self._coordinator.session.append_message(
+                    self._memory_session_id, role, str(out)[:2000]
+                )
 
         report = None
         if observations:
@@ -103,4 +130,10 @@ class KitAgent:
             if isinstance(last, dict) and last.get("format") == "markdown":
                 report = last
 
-        return AgentRunResult(goal=goal, plan=plan, observations=observations, report=report)
+        return AgentRunResult(
+            goal=goal,
+            plan=plan,
+            observations=observations,
+            report=report,
+            memory_session_id=self._memory_session_id,
+        )

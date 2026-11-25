@@ -41,6 +41,17 @@ pytest -q
 
 三终端联调见 [`docs/mcp-host-guide.md`](docs/mcp-host-guide.md)。
 
+### 四种记忆（agent-memory 可选）
+
+```powershell
+pip install -e ..\agent-memory
+$env:AGENT_KIT_USE_COORDINATOR = "1"
+$env:AGENT_KIT_USER_ID = "user-001"
+agent-kit run "写报告要附来源"
+```
+
+`run` 结束输出中的 `memory_session_id` 可用于 `agent-memory session-resume`。
+
 ## 数据分析 Agent
 
 `DataAnalysisAgent` 含教材中的 `AnalysisTask` 与四引擎：`DataProcessor`、`ModelManager`、`VisualizationEngine`、`ReportGenerator`。
